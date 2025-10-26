@@ -1,107 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>R&AW Food Trainer Portal</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.3.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <style>
-    * {margin:0;padding:0;box-sizing:border-box;}
-    body {
-      font-family: 'Orbitron', sans-serif;
-      background: radial-gradient(circle at center, #0a0f1c, #000);
-      color: #00eaff;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .container {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      background: rgba(0,0,0,0.8);
-      border: 2px solid #00eaff;
-      border-radius: 20px;
-      box-shadow: 0 0 50px #00eaff33;
-      padding: 20px;
-      backdrop-filter: blur(8px);
-    }
-    input, select, button {
-      background: rgba(0,0,0,0.7);
-      border: 1px solid #00eaff;
-      color: #00eaff;
-      padding: 10px;
-      border-radius: 8px;
-      margin: 8px;
-      width: 80%;
-      font-size: 1rem;
-    }
-    button:hover {
-      background: #00eaff;
-      color: #000;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    h1 {text-shadow:0 0 10px #00eaff; margin-bottom:10px;}
-    .hidden {display: none;}
-    #foodSection, #approvalSection {width: 100%; text-align: center;}
-    .neon-border {
-      border: 2px solid #00eaff;
-      border-radius: 15px;
-      padding: 15px;
-      box-shadow: 0 0 25px #00eaff33;
-      margin: 10px 0;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>R&AW Food Trainer Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.3.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+* {margin:0;padding:0;box-sizing:border-box;}
+body {
+  font-family: 'Orbitron', sans-serif;
+  background: radial-gradient(circle at center, #0a0f1c, #000);
+  color: #00eaff;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: rgba(0,0,0,0.8);
+  border: 2px solid #00eaff;
+  border-radius: 20px;
+  box-shadow: 0 0 50px #00eaff33;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+input, select, button {
+  background: rgba(0,0,0,0.7);
+  border: 1px solid #00eaff;
+  color: #00eaff;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 8px;
+  width: 80%;
+  font-size: 1rem;
+}
+button:hover {
+  background: #00eaff;
+  color: #000;
+  cursor: pointer;
+  transition: 0.3s;
+}
+h1 {text-shadow:0 0 10px #00eaff; margin-bottom:10px;}
+.hidden {display: none;}
+#foodSection {width: 100%; text-align: center;}
+.neon-border {
+  border: 2px solid #00eaff;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 0 25px #00eaff33;
+  margin: 10px 0;
+}
+#statusMsg {margin-top: 12px; min-height: 1.2rem;}
+#btnBreakfast, #btnLunch, #btnDinner {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  background-color: #3b82f6;
+  color: white;
+  transition: 0.3s;
+}
+#btnBreakfast:hover:not(:disabled),
+#btnLunch:hover:not(:disabled),
+#btnDinner:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+#btnBreakfast:disabled,
+#btnLunch:disabled,
+#btnDinner:disabled {
+  background-color: #b0b0b0;
+  color: #f1f1f1;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+#generateCodeBtn {
+  margin-top: 10px;
+  width: 60%;
+  background-color: #ff5722;
+}
+#generateCodeBtn:hover {
+  background-color: #e64a19;
+}
+</style>
 </head>
 <body>
-  <div class="container" id="loginSection">
-    <h1>R&AW Food Trainer Login</h1>
-    <input type="text" id="username" placeholder="Agent ID" />
-    <input type="password" id="password" placeholder="Access Key" />
-    <button onclick="login()">LOGIN</button>
+
+<div class="container" id="loginSection">
+  <h1>R&AW Food Trainer Login</h1>
+  <input type="text" id="username" placeholder="Agent ID" />
+  <input type="password" id="password" placeholder="Daily Code" />
+  <button onclick="login()">LOGIN</button>
+
+  <!-- Admin only: generate daily code button -->
+  <button id="generateCodeBtn" onclick="generateDailyCode()">🛡️ Generate Today's Code</button>
+  <p id="codeGenMsg"></p>
+</div>
+
+<div class="container hidden" id="foodSection">
+  <h1>Nutrition Log</h1>
+  <div style="display:flex; gap:10px; margin-bottom:10px;">
+    <button id="btnBreakfast" onclick="selectMeal('breakfast')">☀️ Breakfast</button>
+    <button id="btnLunch" onclick="selectMeal('lunch')">🍛 Lunch</button>
+    <button id="btnDinner" onclick="selectMeal('dinner')">🌙 Dinner</button>
   </div>
 
-  <div class="container hidden" id="foodSection">
-    <h1>Mission Nutrition Log</h1>
-    <label>Select Date (28 Oct – 6 Nov 2025)</label>
-    <input type="date" id="dateSelect" min="2025-10-28" max="2025-11-06" />
+  <label>Select Date (28 Oct – 6 Nov 2025)</label>
+  <input type="date" id="dateSelect" min="2025-10-28" max="2025-11-06" />
 
-    <select id="foodSelect">
-      <option value="100">1 Chapati - 100 cal</option>
-      <option value="150">1 Bowl Dal - 150 cal</option>
-      <option value="120">1 Bowl Veg Sabzi - 120 cal</option>
-      <option value="80">1 Bowl Sprouts - 80 cal</option>
-      <option value="50">1 Glass Buttermilk - 50 cal</option>
-      <option value="90">1 Apple - 90 cal</option>
-      <option value="200">Small Bowl Brown Rice - 200 cal</option>
-    </select>
+  <select id="foodSelect">
+    <option value="100">1 Chapati - 100 cal</option>
+    <option value="150">1 Bowl Dal - 150 cal</option>
+    <option value="120">1 Bowl Veg Sabzi - 120 cal</option>
+    <option value="80">1 Bowl Sprouts - 80 cal</option>
+    <option value="50">1 Glass Buttermilk - 50 cal</option>
+    <option value="90">1 Apple - 90 cal</option>
+    <option value="200">Small Bowl Brown Rice - 200 cal</option>
+  </select>
 
-    <input type="file" id="foodImage" accept="image/*" />
+  <input type="file" id="foodImage" accept="image/*" />
+  <button onclick="addFood()">Add Food Item</button>
+  <div id="foodList" class="neon-border"></div>
+  <h3>Total Calories: <span id="totalCalories">0</span> kcal</h3>
+  <button onclick="submitData()">Submit Log</button>
+  <p id="statusMsg"></p>
+</div>
 
-    <button onclick="addFood()">Add Food Item</button>
-    <div id="foodList" class="neon-border"></div>
-
-    <h3>Total Calories: <span id="totalCalories">0</span> kcal</h3>
-
-    <button onclick="submitData()">Submit Log</button>
-    <p id="statusMsg"></p>
-  </div>
-
-  <script>
+<script>
 document.addEventListener("DOMContentLoaded", () => {
-  // --- Firebase Setup ---
   const firebaseConfig = {
     apiKey: "AIzaSyBTi5gxrk8BF08y2yFlLwbT5a5ys0PW4yc",
     authDomain: "rag0730.firebaseapp.com",
@@ -111,87 +151,163 @@ document.addEventListener("DOMContentLoaded", () => {
     messagingSenderId: "885690054657",
     appId: "1:885690054657:web:6df62607429e44538a6800"
   };
-
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // --- Declare globals ---
   window.totalCalories = 0;
   window.foodLog = [];
+  window.currentUser = "RAG0731";
+  window.selectedMeal = null;
 
-  // --- Login Function ---
-  window.login = function () {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
+  function nowInIST() {
+    const now = new Date();
+    const istOffsetMinutes = 330;
+    const utcMillis = now.getTime() + now.getTimezoneOffset() * 60000;
+    const istMillis = utcMillis + istOffsetMinutes * 60000;
+    return new Date(istMillis);
+  }
 
-    if (user === 'RAG0731' && pass === 'test') {
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('foodSection').classList.remove('hidden');
-    } else {
-      alert('Access Denied 🚫');
-    }
+  function formatDateYMD(d) {
+    const y = d.getFullYear();
+    const mm = ("0" + (d.getMonth() + 1)).slice(-2);
+    const dd = ("0" + d.getDate()).slice(-2);
+    return `${y}-${mm}-${dd}`;
+  }
+
+  function getCurrentMealWindow(istDate) {
+    const h = istDate.getHours();
+    const m = istDate.getMinutes();
+    const time = h + m / 60;
+    if (time >= 6 && time < 10) return "breakfast";
+    if (time >= 12 && time < 15) return "lunch";
+    if (time >= 17 && time < 21) return "dinner";
+    return "closed";
+  }
+
+  function updateMealButtons() {
+    const istNow = nowInIST();
+    const meal = getCurrentMealWindow(istNow);
+    const breakfastBtn = document.getElementById("btnBreakfast");
+    const lunchBtn = document.getElementById("btnLunch");
+    const dinnerBtn = document.getElementById("btnDinner");
+    breakfastBtn.disabled = true;
+    lunchBtn.disabled = true;
+    dinnerBtn.disabled = true;
+    if (meal === "breakfast") breakfastBtn.disabled = false;
+    else if (meal === "lunch") lunchBtn.disabled = false;
+    else if (meal === "dinner") dinnerBtn.disabled = false;
+  }
+
+  window.selectMeal = function(mealType) {
+    if (document.getElementById(`btn${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`).disabled)
+      return alert("⏳ This meal window is not active right now.");
+    window.selectedMeal = mealType;
+    alert(`🍽️ ${mealType.toUpperCase()} selected.`);
   };
 
-  // --- Add Food Function ---
-  window.addFood = function () {
-    const foodSelect = document.getElementById('foodSelect');
+  function randomDailyCode(length = 20) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
+    let code = '';
+    for (let i = 0; i < length; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    return code;
+  }
+
+  window.generateDailyCode = async function() {
+  const btn = document.getElementById('generateCodeBtn');
+  const istNow = nowInIST(); // get current IST datetime
+  const today = formatDateYMD(istNow); // YYYY-MM-DD
+  const userKey = 'RAG0731';
+
+  const codeRef = db.ref(`dailyCodes/${today}/${userKey}`);
+  const snap = await codeRef.once('value');
+  if (snap.exists()) {
+    btn.style.display = 'none'; // already generated for today
+    return;
+  }
+
+  // Generate 20-char random code
+  function randomDailyCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
+    let code = '';
+    for (let i = 0; i < 20; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    return code;
+  }
+
+  const newCode = randomDailyCode();
+
+  // Save in database with date and exact IST time
+  await codeRef.set({
+    code: newCode,
+    generatedDate: today,
+    generatedTimeIST: istNow.toTimeString().slice(0, 8), // HH:MM:SS
+    generatedAtISO: istNow.toISOString()
+  });
+
+  btn.style.display = 'none'; // hide after generation
+};
+
+  window.login = async function() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    if (user === "RAG0731") {
+      const today = formatDateYMD(nowInIST());
+      const codeSnap = await db.ref(`dailyCodes/${today}/${user}`).once('value');
+      if (!codeSnap.exists()) { alert('⚠️ Daily code not generated yet. Contact admin.'); return; }
+      const validCode = codeSnap.val().code;
+      if (pass !== validCode) { alert('❌ Incorrect daily code.'); return; }
+    } else {
+      if (pass !== "test") { alert("Access Denied 🚫"); return; }
+    }
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("foodSection").classList.remove("hidden");
+    updateMealButtons();
+  };
+
+  window.addFood = function() {
+    if (!window.selectedMeal) return alert("⚠️ Please select a meal first (Breakfast/Lunch/Dinner).");
+    const foodSelect = document.getElementById("foodSelect");
     const cal = parseInt(foodSelect.value);
     const name = foodSelect.options[foodSelect.selectedIndex].text;
-    const fileInput = document.getElementById('foodImage');
-
-    if (!fileInput.files[0]) {
-      alert('⚠️ Please upload a food image.');
-      return;
-    }
-
+    const fileInput = document.getElementById("foodImage");
+    if (!fileInput.files[0]) return alert("⚠️ Please upload a food image.");
     window.totalCalories += cal;
     window.foodLog.push({ name, cal });
-
-    document.getElementById('totalCalories').innerText = window.totalCalories;
-    const list = document.getElementById('foodList');
-    list.innerHTML += `<p>${name}</p>`;
-
-    fileInput.value = ''; // Reset input
+    document.getElementById("totalCalories").innerText = window.totalCalories;
+    document.getElementById("foodList").innerHTML += `<p>${name}</p>`;
+    fileInput.value = "";
   };
 
-  // --- Submit Data Function ---
-  window.submitData = function () {
-    const now = new Date();
-    if (now.getHours() >= 20 && now.getMinutes() >= 30) {
-      alert('🚫 Portal Closed — Submissions locked after 8:30 PM.');
-      return;
-    }
+  async function isDateApproved(dateKey) {
+    try { const snap = await db.ref(`approvals/${dateKey}`).once("value"); return snap.exists() && snap.val().approved === true; }
+    catch(err){ console.error(err); return false; }
+  }
 
-    const date = document.getElementById('dateSelect').value;
-    if (!date) {
-      alert('Please select a valid date.');
-      return;
-    }
-
-    if (window.foodLog.length === 0) {
-      alert('No food items added.');
-      return;
-    }
-
-    const ref = db.ref('foodLogs/' + date);
-    ref.push({
-      user: 'RAG0731',
-      date: date,
-      items: window.foodLog,
-      totalCalories: window.totalCalories,
-      timestamp: new Date().toISOString()
-    });
-
-    document.getElementById('statusMsg').innerText =
-      '✅ Log successfully submitted to HQ.';
-
-    // Reset
-    window.foodLog = [];
-    window.totalCalories = 0;
-    document.getElementById('foodList').innerHTML = '';
-    document.getElementById('totalCalories').innerText = '0';
+  window.submitData = async function() {
+    const istNow = nowInIST();
+    const selectedDate = document.getElementById("dateSelect").value;
+    if (!selectedDate) return alert("Please select a date.");
+    if (!window.selectedMeal) return alert("⚠️ Select a meal first.");
+    if (window.foodLog.length === 0) return alert("Add some food items before submitting.");
+    const todayIST = formatDateYMD(istNow);
+    if (selectedDate !== todayIST) return alert("❌ You can only submit for today's date.");
+    const approved = await isDateApproved(selectedDate);
+    if (!approved) return alert(`⚠️ Date ${selectedDate} not approved yet.`);
+    const currentMeal = getCurrentMealWindow(istNow);
+    if (currentMeal !== window.selectedMeal) return alert(`⏳ Submit only during active meal window.`);
+    const userKey = window.currentUser;
+    const path = `foodLogs/${selectedDate}/${window.selectedMeal}/${userKey}`;
+    const already = await db.ref(path).once("value");
+    if (already.exists()) return alert("⚠️ Already submitted for this meal.");
+    const payload = { user: userKey, date:selectedDate, meal:window.selectedMeal, items:window.foodLog, totalCalories:window.totalCalories, approved:false, submittedAtIST:istNow.toISOString() };
+    try { await db.ref(path + "/entries").push(payload);
+      window.foodLog=[]; window.totalCalories=0;
+      document.getElementById("foodList").innerHTML=""; document.getElementById("totalCalories").innerText="0";
+    } catch(err){ console.error(err); alert("❌ Database error."); }
   };
+
+  setInterval(updateMealButtons, 60000);
 });
 </script>
+
 </body>
 </html>
