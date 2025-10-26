@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R&AW HQ Approval & Admin Upload</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<style>
+body {
+  background: #000;
+  color: #00eaff;
+  font-family: 'Orbitron', sans-serif;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 40px;
+  padding-top: 40px;
+}
+.neon-border {
+  border: 2px solid #00eaff;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 0 25px #00eaff33;
+  text-align: center;
+  width: 370px;
+  background: rgba(0,0,0,0.8);
+}
+input, button, select {
+  background: rgba(0,0,0,0.7);
+  border: 1px solid #00eaff;
+  color: #00eaff;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 8px;
+  width: 80%;
+}
+button:hover {
+  background: #00eaff;
+  color: #000;
+  cursor: pointer;
+  transition: 0.3s;
+}
+img#proofPreview {
+  width: 100%;
+  max-width: 250px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #00eaff;
+  display: none;
+}
+.meal-item {
+  border: 1px dashed #00eaff;
+  border-radius: 10px;
+  padding: 8px;
+  margin: 8px;
+}
+h1 {
+  position: absolute;
+  top: 10px;
+  text-align: center;
+  width: 100%;
+  text-shadow: 0 0 10px #00eaff;
+}
+</style>
+</head>
+<body>
+    <!-- Left Section: Approval -->
+<div class="neon-border">
+  <h2>📅 Approve Date</h2>
+  <input type="date" id="dateInput" min="2025-10-28" max="2025-11-06">
+  <input type="password" id="codeInput" placeholder="Enter Approval Code">
+  <button onclick="approveDate()">Approve Date</button>
+  <p id="msg"></p>
+</div>
+
+<!-- Right Section: Missed Entry Upload -->
+<div class="neon-border">
+  <h2>🔒 Admin Missed Entry Upload</h2>
+  <p>If an agent forgot to submit, upload their proof here.</p>
+
+  <input type="date" id="missedDate">
+  <select id="mealTypeMissed">
+    <option value="">-- Select Meal Type --</option>
+    <option value="breakfast">Breakfast</option>
+    <option value="lunch">Lunch</option>
+    <option value="dinner">Dinner</option>
+  </select>
+
+  <div id="mealList"></div>
+
+  <select id="foodSelectAdmin">
+    <option value="">-- Select Food Item --</option>
+    <option value="100">1 Chapati - 100 cal</option>
+    <option value="150">1 Bowl Dal - 150 cal</option>
+    <option value="120">1 Bowl Veg Sabzi - 120 cal</option>
+    <option value="80">1 Bowl Sprouts - 80 cal</option>
+    <option value="50">1 Glass Buttermilk - 50 cal</option>
+    <option value="90">1 Apple - 90 cal</option>
+    <option value="200">Small Bowl Brown Rice - 200 cal</option>
+  </select>
+  <button onclick="addMeal()">➕ Add Meal</button>
+
+  <input type="file" id="proofImage" accept="image/*" onchange="previewProof()">
+  <img id="proofPreview" />
+
+  <button onclick="adminUpload()">Upload All Meals</button>
+  <p id="adminUploadStatus"></p>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBTi5gxrk8BF08y2yFlLwbT5a5ys0PW4yc",
+  authDomain: "rag0730.firebaseapp.com",
+  databaseURL: "https://rag0730-default-rtdb.firebaseio.com",
+  projectId: "rag0730",
+  storageBucket: "rag0730.firebasestorage.app",
+  messagingSenderId: "885690054657",
+  appId: "1:885690054657:web:6df62607429e44538a6800"
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const storage = firebase.storage();
+
+let meals = [];
+
+// -------- APPROVE DATE FUNCTION --------
+async function approveDate() {
+  const date = document.getElementById('dateInput').value;
+  const code = document.getElementById('codeInput').value.trim();
+  const msg = document.getElementById('msg');
+
+  if (!date) return msg.innerText = '⚠️ Please select a date.';
+  if (code !== 'B663') return msg.innerText = '❌ Incorrect approval code.';
+
+  try {
+    await db.ref('approvals/' + date).set({
+      approved: true,
+      approvedBy: 'Agent 0728',
+      approvedAt: new Date().toISOString()
+    });
+    msg.innerText = `✅ Date ${date} approved successfully.`;
+  } catch (err) {
+    console.error(err);
+    msg.innerText = '❌ Database error.';
+  }
+}
+
+// -------- ADD MEAL --------
+function addMeal() {
+  const foodSelect = document.getElementById('foodSelectAdmin');
+  const foodName = foodSelect.options[foodSelect.selectedIndex].text;
+  const foodCal = foodSelect.value;
+
+  if (!foodCal) {
+    alert("⚠️ Please select a food item.");
+    return;
+  }
+
+  meals.push({ name: foodName, calories: parseInt(foodCal) });
+  updateMealList();
+}
+
+// -------- UPDATE MEAL LIST UI --------
+function updateMealList() {
+  const mealList = document.getElementById('mealList');
+  mealList.innerHTML = "";
+  meals.forEach((m, i) => {
+    const div = document.createElement("div");
+    div.className = "meal-item";
+    div.innerHTML = `${m.name} (${m.calories} cal) <button onclick="removeMeal(${i})">❌</button>`;
+    mealList.appendChild(div);
+  });
+}
+
+// -------- REMOVE MEAL --------
+function removeMeal(i) {
+  meals.splice(i, 1);
+  updateMealList();
+}
+
+// -------- PREVIEW PROOF --------
+function previewProof() {
+  const fileInput = document.getElementById('proofImage');
+  const preview = document.getElementById('proofPreview');
+  const file = fileInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+// -------- ADMIN UPLOAD FUNCTION --------
+async function adminUpload() {
+  const date = document.getElementById('missedDate').value;
+  const mealType = document.getElementById('mealTypeMissed').value;
+  const file = document.getElementById('proofImage').files[0];
+  const status = document.getElementById('adminUploadStatus');
+
+  if (!date || !mealType || !file || meals.length === 0) {
+    alert("⚠️ Please select date, meal type, add meals, and upload proof.");
+    return;
+  }
+
+  const storageRef = storage.ref(`missedProofs/${date}_${mealType}_${file.name}`);
+
+  try {
+    // Upload proof
+    await storageRef.put(file);
+    const imageUrl = await storageRef.getDownloadURL();
+
+    // Save all meals in Firebase
+    const totalCal = meals.reduce((sum, m) => sum + m.calories, 0);
+    await db.ref(`missedUploads/${date}/${mealType}`).push({
+      uploadedBy: "Admin",
+      proofUrl: imageUrl,
+      date,
+      mealType,
+      meals,
+      totalCalories: totalCal,
+      timestamp: new Date().toISOString(),
+      status: "Approved (Admin Upload)"
+    });
+
+    status.innerHTML = "✅ All meals uploaded successfully!";
+    status.style.color = "#00ff88";
+
+    // Reset form
+    document.getElementById('missedDate').value = '';
+    document.getElementById('mealTypeMissed').value = '';
+    document.getElementById('foodSelectAdmin').selectedIndex = 0;
+    document.getElementById('proofImage').value = '';
+    document.getElementById('proofPreview').style.display = 'none';
+    meals = [];
+    updateMealList();
+  } catch (error) {
+    console.error(error);
+    status.innerHTML = "❌ Upload failed. Check console.";
+    status.style.color = "red";
+  }
+}
+</script>
+</body>
+</html>
