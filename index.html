@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>R&AW Food Trainer Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.3.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    * {margin:0;padding:0;box-sizing:border-box;}
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: radial-gradient(circle at center, #0a0f1c, #000);
+      color: #00eaff;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: rgba(0,0,0,0.8);
+      border: 2px solid #00eaff;
+      border-radius: 20px;
+      box-shadow: 0 0 50px #00eaff33;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+    input, select, button {
+      background: rgba(0,0,0,0.7);
+      border: 1px solid #00eaff;
+      color: #00eaff;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 8px;
+      width: 80%;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #00eaff;
+      color: #000;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    h1 {text-shadow:0 0 10px #00eaff; margin-bottom:10px;}
+    .hidden {display: none;}
+    #foodSection, #approvalSection {width: 100%; text-align: center;}
+    .neon-border {
+      border: 2px solid #00eaff;
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 0 25px #00eaff33;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loginSection">
+    <h1>R&AW Food Trainer Login</h1>
+    <input type="text" id="username" placeholder="Agent ID" />
+    <input type="password" id="password" placeholder="Access Key" />
+    <button onclick="login()">LOGIN</button>
+  </div>
+
+  <div class="container hidden" id="foodSection">
+    <h1>Mission Nutrition Log</h1>
+    <label>Select Date (28 Oct – 6 Nov 2025)</label>
+    <input type="date" id="dateSelect" min="2025-10-28" max="2025-11-06" />
+
+    <select id="foodSelect">
+      <option value="100">1 Chapati - 100 cal</option>
+      <option value="150">1 Bowl Dal - 150 cal</option>
+      <option value="120">1 Bowl Veg Sabzi - 120 cal</option>
+      <option value="80">1 Bowl Sprouts - 80 cal</option>
+      <option value="50">1 Glass Buttermilk - 50 cal</option>
+      <option value="90">1 Apple - 90 cal</option>
+      <option value="200">Small Bowl Brown Rice - 200 cal</option>
+    </select>
+
+    <input type="file" id="foodImage" accept="image/*" />
+
+    <button onclick="addFood()">Add Food Item</button>
+    <div id="foodList" class="neon-border"></div>
+
+    <h3>Total Calories: <span id="totalCalories">0</span> kcal</h3>
+
+    <button onclick="submitData()">Submit Log</button>
+    <p id="statusMsg"></p>
+  </div>
+
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  // --- Firebase Setup ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTi5gxrk8BF08y2yFlLwbT5a5ys0PW4yc",
+    authDomain: "rag0730.firebaseapp.com",
+    databaseURL: "https://rag0730-default-rtdb.firebaseio.com",
+    projectId: "rag0730",
+    storageBucket: "rag0730.firebasestorage.app",
+    messagingSenderId: "885690054657",
+    appId: "1:885690054657:web:6df62607429e44538a6800"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // --- Declare globals ---
+  window.totalCalories = 0;
+  window.foodLog = [];
+
+  // --- Login Function ---
+  window.login = function () {
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value.trim();
+
+    if (user === 'RAG0731' && pass === 'test') {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('foodSection').classList.remove('hidden');
+    } else {
+      alert('Access Denied 🚫');
+    }
+  };
+
+  // --- Add Food Function ---
+  window.addFood = function () {
+    const foodSelect = document.getElementById('foodSelect');
+    const cal = parseInt(foodSelect.value);
+    const name = foodSelect.options[foodSelect.selectedIndex].text;
+    const fileInput = document.getElementById('foodImage');
+
+    if (!fileInput.files[0]) {
+      alert('⚠️ Please upload a food image.');
+      return;
+    }
+
+    window.totalCalories += cal;
+    window.foodLog.push({ name, cal });
+
+    document.getElementById('totalCalories').innerText = window.totalCalories;
+    const list = document.getElementById('foodList');
+    list.innerHTML += `<p>${name}</p>`;
+
+    fileInput.value = ''; // Reset input
+  };
+
+  // --- Submit Data Function ---
+  window.submitData = function () {
+    const now = new Date();
+    if (now.getHours() >= 20 && now.getMinutes() >= 30) {
+      alert('🚫 Portal Closed — Submissions locked after 8:30 PM.');
+      return;
+    }
+
+    const date = document.getElementById('dateSelect').value;
+    if (!date) {
+      alert('Please select a valid date.');
+      return;
+    }
+
+    if (window.foodLog.length === 0) {
+      alert('No food items added.');
+      return;
+    }
+
+    const ref = db.ref('foodLogs/' + date);
+    ref.push({
+      user: 'RAG0731',
+      date: date,
+      items: window.foodLog,
+      totalCalories: window.totalCalories,
+      timestamp: new Date().toISOString()
+    });
+
+    document.getElementById('statusMsg').innerText =
+      '✅ Log successfully submitted to HQ.';
+
+    // Reset
+    window.foodLog = [];
+    window.totalCalories = 0;
+    document.getElementById('foodList').innerHTML = '';
+    document.getElementById('totalCalories').innerText = '0';
+  };
+});
+</script>
+</body>
+</html>
